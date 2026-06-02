@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biblické ženy</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 20px auto; padding: 20px; background-color: #f4f4f9; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        button { display: block; width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; background: #fff; cursor: pointer; text-align: left; font-size: 16px; transition: 0.2s; }
+        button:hover:not(:disabled) { background: #f0f0f0; }
+        
+        .correct { background: #d4edda !important; border-color: #c3e6cb; color: #155724; font-weight: bold; }
+        .incorrect { background: #f8d7da !important; border-color: #f5c6cb; color: #721c24; opacity: 0.5; cursor: not-allowed; }
+        
+        .feedback { font-weight: bold; margin-top: 15px; display: none; line-height: 1.4; }
+        /* Pridal som margin-bottom, aby bol obrázok pekne oddelený od tlačidiel pod ním */
+        .quiz-img { max-width: 100%; height: auto; border-radius: 6px; margin: 15px 0; display: none; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        
+        #next-btn { background: #007bff; color: white; text-align: center; display: none; font-weight: bold; border: none; }
+        #next-btn:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h2 id="question">Načítám otázku...</h2>
+        
+        <img id="quiz-image" class="quiz-img" src="" alt="Obrázok k otázke">
+        
+        <div id="answers"></div>
+        <div id="feedback" class="feedback"></div>
+        
+        <button id="next-btn">Další otázka ➔</button>
+    </div>
+
+    <script>
+        const quizData = [
+            {
+                q: "Jaká biblická žena je na obrázku?",
+                a: ["Baatseba", "Svatá Alžběta", "Hagar a Sára"],
+                correct: 1, 
+                info: "Správná odpověď!",
+                img: "obrazky/alzbeta.jpeg" 
+            },
+            {
+                q: "Jaká biblická žena je na obrázku?",
+                a: ["Jael", "Salome", "Delila"],
+                correct: 2, 
+                info: "Správná odpověď!",
+                img: "obrazky/delila.jpg"
+            },
+	    {
+                q: "Jaká biblická žena je na obrázku?",
+                a: ["Svatá Alžběta", "Zuzana", "Jael"],
+                correct: 2, 
+                info: "Správná odpověď!",
+                img: "obrazky/jael.jpg"
+            },
+	    {
+                q: "Jaká biblická žena je na obrázku?",
+                a: ["Panna Mária", "Eva", "Svatá Anna"],
+                correct: 0, 
+                info: "Správná odpověď!",
+                img: "obrazky/Panna maria2.jpg"
+            },
+	    {
+                q: "Jaká biblická žena je na obrázku?",
+                a: ["Delila", "Svatá Anna", "Salome"],
+                correct: 1, 
+                info: "Správná odpověď!",
+                img: "obrazky/anna.jpg"
+            },
+	    {
+                q: "Jaká biblická žena je na obrázku?",
+                a: ["Eva", "Zuzana", "Mária Magdaléna"],
+                correct: 0, 
+                info: "Správná odpověď!",
+                img: "obrazky/eva.jpg"
+            },
+	    {
+                q: "Jaká biblická žena je na obrázku?",
+                a: ["Judita", "Jael", "Baatseba"],
+                correct: 0, 
+                info: "Správná odpověď!",
+                img: "obrazky/judita.jpg"
+            },
+	    {
+                q: "Jaká biblická žena je na obrázku?",
+                a: ["Delila", "Salome", "Svatá Anna"],
+                correct: 1, 
+                info: "Správná odpověď!",
+                img: "obrazky/salome.jfif"
+            },
+	    {
+                q: "Jaká biblická žena je na obrázku?",
+                a: ["Zuzana", "Baatseba", "Jael"],
+                correct: 0, 
+                info: "Správná odpověď!",
+                img: "obrazky/zuzana.jpg"
+            },
+            {
+                q: "Jaká biblická žena je na obrázku?",
+                a: ["Eva", "Mária Magdaléna", "Baatseba"],
+                correct: 2, 
+                info: "Správná odpověď!",
+                img: "obrazky/baatseba.jpg"
+            },
+            {
+                q: "Jaká biblická žena je na obrázku?",
+                a: ["Hagar a Sára", "Svatá Alžběta", "Svatá Anna"],
+                correct: 0, 
+                info: "Správná odpověď!",
+                img: "obrazky/hagar a sara.jpg"
+            },
+            {
+                q: "Jaká biblická žena je na obrázku?",
+                a: ["Delila", "Judita", "Mária Magdaléna"],
+                correct: 2, 
+                info: "Správná odpověď!",
+                img: "obrazky/maria magdalena.jpg"
+            }
+        ];
+
+        let currentId = 0;
+        const qEl = document.getElementById("question");
+        const ansEl = document.getElementById("answers");
+        const fbEl = document.getElementById("feedback");
+        const imgEl = document.getElementById("quiz-image");
+        const nextBtn = document.getElementById("next-btn");
+
+        function loadQuestion() {
+            fbEl.style.display = "none";
+            imgEl.style.display = "none";
+            imgEl.src = ""; 
+            nextBtn.style.display = "none";
+            ansEl.innerHTML = "";
+            
+            if(currentId >= quizData.length) {
+                qEl.innerText = "Kvíz dokončen! Děkujeme za účast.";
+                return;
+            }
+
+            let data = quizData[currentId];
+            qEl.innerText = data.q;
+
+            if (data.img) {
+                imgEl.src = data.img;
+                imgEl.style.display = "block";
+            }
+
+            data.a.forEach((ans, index) => {
+                const btn = document.createElement("button");
+                btn.innerText = ans;
+                btn.onclick = () => checkAnswer(btn, index, data.correct, data.info);
+                ansEl.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(clickedButton, selectedIndex, correctIndex, info) {
+            if (selectedIndex === correctIndex) {
+                // Správna odpoveď
+                const buttons = ansEl.querySelectorAll("button");
+                buttons.forEach((btn, idx) => {
+                    btn.disabled = true; 
+                    if(idx === correctIndex) btn.classList.add("correct");
+                });
+                
+                // Zobrazí sa už len sprievodný text (info) a tlačidlo ďalej
+                fbEl.innerText = info;
+                fbEl.style.display = "block";
+                
+                nextBtn.style.display = "block"; 
+            } else {
+                // Nesprávna odpoveď
+                clickedButton.classList.add("incorrect");
+                clickedButton.disabled = true;
+            }
+        }
+
+        nextBtn.onclick = () => {
+            currentId++;
+            loadQuestion();
+        };
+
+        loadQuestion(); 
+    </script>
+</body>
+</html>
